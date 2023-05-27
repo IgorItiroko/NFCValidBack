@@ -54,6 +54,14 @@ def insert_participant_list():
 def get_participant_list(class_id):
     return participant_collection.find_one({"classId": int(class_id)}, {"_id": 0})['participantList']
 
+
+@app.route("/editparticipantlist", methods=['PUT'])
+def edit_participant_list():
+    class_id = request.json['id']
+    participant_list = request.json['participantList']
+    result = participant_collection.update_one({"classId": class_id}, {"$set": { "participantList": participant_list}})
+    return "Success" if result.modified_count is not None else "Failed"
+
 @app.route("/openpresencelog", methods=['POST'])
 def open_presence_log():
     class_id = request.json['id']
@@ -97,3 +105,4 @@ def close_presence_log():
     close_presence = {"$set": {"openWindow": False, "presencePercentage": int(calculated_presence), "numberOfParticipants": int(presence_counter)}}
     result = presence_collection.update_one({"classId": int(class_id), "date": int(date)}, close_presence)
     return f'{calculated_presence}' if result.modified_count else 'Failed'
+
