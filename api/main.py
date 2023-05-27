@@ -45,7 +45,9 @@ def set_new_class():
 def insert_participant_list():
     class_id = request.json['id']
     participant_list = request.json['participantList']
-    result = participant_collection.insert_one({"classId": class_id, "participantList": participant_list, "participantCounter": len(participant_list)}).inserted_id
+    result = participant_collection.insert_one({"classId": class_id, "participantList": participant_list }).inserted_id
+    if result:
+        class_collection.update_one({"id": int(class_id)}, { "$set": { "haveParticipantList": True}})
     return "Success" if result is not None else "Failed"
 
 @app.route("/getparticipantlist/<class_id>", methods=['GET'])
@@ -57,11 +59,38 @@ def open_presence_log():
     class_id = request.json['id']
     date = request.json['date']
     participant_object = participant_collection.find_one({"classId": int(class_id)}, {"_id": 0})
-    print(participant_object)
     if participant_object is None: 
         return "Nenhuma lista de participantes foi encontrada"
-    presence_log = { "class_id": class_id, "window": True, "date": int(date), "presencePercentage": 0}
+    presence_log = { "classId": class_id, "openWindow": True, "date": int(date), "presencePercentage": 0, "numberOfParticipants": len(participant_object.participantList) }
     for ra in participant_object['participantList']:
         presence_log[ra] = False
     result = presence_collection.insert_one(presence_log).inserted_id
     return "Success" if result is not None else 'Failed'
+
+@app.route("/validatepresence", methods=['PUT'])
+def validate_presenc():
+    class_id = request.json['id']
+    user_ra = request.json['ra']
+    update_presence = {"$set": {user_ra: True}}
+    result = presence_collection.update_one({"classId": int(class_id) }, update_presence)
+    return "Success" if result.modified_count else 'Failed'
+
+def is_ra(ra):
+    return True if ra.isnumeric() and len(ra) == 8 else False
+
+def calculate_presence(presence):
+    ra_number = presence.numberOfParticipants
+    presence_counter = 0
+    for key, value in presence:
+        if is_ra(key) and value:
+            presence_counter += 1
+    return (presence_counter / ra_number) * 100
+
+@app.route("/closepresencelog", methods=['PUT'])
+def close_presence_log():
+    class_id = request.json['id']
+    date = request.json['date']
+    presence = presence_collection.find_one({"classId": int(class_id), "date": int(date)})
+    close_presence = {"$set": {"openWindow": False, "presencePercentage": calculate_presence(presence)}}
+    result = presence_collection.update_one({"classId": int(class_id), "date": int(date)}, close_presence)
+    return "Succes" if result.modified_count else 'Failed'
