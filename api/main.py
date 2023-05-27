@@ -7,7 +7,7 @@ from bson import json_util
 
 
 load_dotenv()
-mongo_connection = os.getenv('MONGODB_URI')
+mongo_connection = os.getenv('MONGO_CONNECTION')
 client = MongoClient(mongo_connection)
 class_collection = client['Events']['Classes']
 
