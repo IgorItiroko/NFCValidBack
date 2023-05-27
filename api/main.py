@@ -52,7 +52,7 @@ def insert_participant_list():
 
 @app.route("/getparticipantlist/<class_id>", methods=['GET'])
 def get_participant_list(class_id):
-    return list(participant_collection.find({"classId": int(class_id)}, {"_id": 0}))
+    return participant_collection.find_one({"classId": int(class_id)}, {"_id": 0})['participantList']
 
 @app.route("/openpresencelog", methods=['POST'])
 def open_presence_log():
