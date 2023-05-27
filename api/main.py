@@ -38,5 +38,3 @@ def set_new_class():
                                            "hour": class_hour, "color": class_color}).inserted_id
     return f'{highest_id}' if result is not None else "Failed"
 
-
-app.run(host='0.0.0.0')
