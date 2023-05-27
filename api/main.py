@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 @app.route("/", methods=['GET'])
 def home_route():
-    return list(class_collection.find({},{"_id": 0}))
+    return "Hello World"
 
 
 @app.route("/getclasses", methods=['GET'])
