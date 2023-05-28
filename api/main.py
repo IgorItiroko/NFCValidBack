@@ -75,6 +75,14 @@ def open_presence_log():
     result = presence_collection.insert_one(presence_log).inserted_id
     return "Success" if result is not None else 'Failed'
 
+@app.route("/reopenpresencelog", methods=['PUT'])
+def reopen_presence_log():
+    class_id = request.json['id']
+    date = request.json['date']
+    update_log = {"$set": { "openWindow": True}}
+    result = presence_collection.update_one({"classId": int(class_id), "date": int(date)}, update_log)
+    return "Success" if result.modified_count is not None else 'Failed'
+
 @app.route("/validatepresence", methods=['PUT'])
 def validate_presenc():
     class_id = request.json['id']
