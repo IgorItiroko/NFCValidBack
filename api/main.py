@@ -108,4 +108,5 @@ def close_presence_log():
 
 @app.route("/getpresencelog/<class_id>/<date>", methods=['GET'])
 def get_presence_log(class_id, date):
-    return presence_collection.find_one({"classId": int(class_id), "date": int(date)}, {"_id": 0})
+    result = presence_collection.find_one({"classId": int(class_id), "date": int(date)}, {"_id": 0})
+    return result if result is not None else "Not Found"
