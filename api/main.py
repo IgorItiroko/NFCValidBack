@@ -80,9 +80,13 @@ def validate_presenc():
     class_id = request.json['id']
     date = request.json['date']
     user_ra = request.json['ra']
-    update_presence = {"$set": {user_ra: True}}
-    result = presence_collection.update_one({"classId": int(class_id), "date": int(date) }, update_presence)
-    return "Success" if result.modified_count else 'Failed'
+    presence = presence_collection.find_one({"classId": int(class_id), "date": int(date)}, {"_id": 0})
+    if presence['openWindow']:
+        update_presence = {"$set": {user_ra: True}}
+        result = presence_collection.update_one({"classId": int(class_id), "date": int(date) }, update_presence)
+        return "Success" if result.modified_count else 'Failed'
+    else:
+        return "Presence Validation Window is Closed"
 
 def is_ra(ra):
     return True if ra.isnumeric() and len(ra) == 8 else False
