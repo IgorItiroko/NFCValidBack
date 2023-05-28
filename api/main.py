@@ -106,3 +106,6 @@ def close_presence_log():
     result = presence_collection.update_one({"classId": int(class_id), "date": int(date)}, close_presence)
     return f'{calculated_presence}' if result.modified_count else 'Failed'
 
+@app.route("/getpresencelog/<class_id>/<date>", methods=['GET'])
+def get_presence_log(class_id, date):
+    return presence_collection.find_one({"classId": int(class_id), "date": int(date)}, {"_id": 0})
