@@ -39,7 +39,7 @@ def set_new_class():
         highest_id = item['id'] if item['id'] > highest_id else highest_id
     result = class_collection.insert_one({ "id": highest_id + 1, "className": class_name, "weekday":class_weekday, "professor": class_professor,\
                                            "hour": class_hour, "color": class_color, "haveParticipantList": False }).inserted_id
-    return f'{highest_id}' if result is not None else "Failed"
+    return f'{highest_id + 1}' if result is not None else "Failed"
 
 @app.route("/insertparticipantlist", methods=['POST'])
 def insert_participant_list():
