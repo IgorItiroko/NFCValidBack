@@ -12,6 +12,7 @@ client = MongoClient(mongo_connection)
 class_collection = client['Events']['Classes']
 participant_collection = client['Events']['Participants']
 presence_collection = client['Events']['PresenceLog']
+users_collection = client['Users']['Students']
 
 app = Flask(__name__)
 
@@ -24,7 +25,11 @@ def home_route():
 def get_classes():
     return list(class_collection.find({},{"_id": 0}))
 
-    
+@app.route("/deleteclass/<class_id>", methods=['DELETE'])
+def delete_class(class_id):
+    result = class_collection.delete_one({"id": class_id})
+    participant_collection.delete_one({"classId": class_id})
+    return "Success" if result.deleted_count else "Failed"
 
 @app.route("/includeclass", methods=['POST'])
 def set_new_class():
@@ -33,12 +38,14 @@ def set_new_class():
     class_professor = request.json['professor']
     class_hour = request.json['hour']
     class_color = request.json['color']
+    class_building = request.json['building']
+    class_room = request.json['room']
     class_list = list(class_collection.find({}))
     highest_id = 0
     for item in class_list:
         highest_id = item['id'] if item['id'] > highest_id else highest_id
     result = class_collection.insert_one({ "id": highest_id + 1, "className": class_name, "weekday":class_weekday, "professor": class_professor,\
-                                           "hour": class_hour, "color": class_color, "haveParticipantList": False }).inserted_id
+                                           "building": class_building, "room": class_room,"hour": class_hour, "color": class_color, "haveParticipantList": False }).inserted_id
     return f'{highest_id + 1}' if result is not None else "Failed"
 
 @app.route("/insertparticipantlist", methods=['POST'])
@@ -46,6 +53,8 @@ def insert_participant_list():
     class_id = request.json['id']
     participant_list = request.json['participantList']
     result = participant_collection.insert_one({"classId": class_id, "participantList": participant_list }).inserted_id
+    for participant in participant_list:
+        users_collection.update_one({"RA": int(participant)}, {"$push": {"classesIn": class_id}})
     if result:
         class_collection.update_one({"id": int(class_id)}, { "$set": { "haveParticipantList": True}})
     return "Success" if result is not None else "Failed"
@@ -59,6 +68,8 @@ def get_participant_list(class_id):
 def edit_participant_list():
     class_id = request.json['id']
     participant_list = request.json['participantList']
+    for participant in participant_list:
+        users_collection.update_one({"RA": int(participant)}, {"$addToSet": {"classesIn": class_id}})
     result = participant_collection.update_one({"classId": class_id}, {"$set": { "participantList": participant_list}})
     return "Success" if result.modified_count is not None else "Failed"
 
@@ -89,7 +100,8 @@ def validate_presenc():
     date = request.json['date']
     user_ra = request.json['ra']
     presence = presence_collection.find_one({"classId": int(class_id), "date": int(date)}, {"_id": 0})
-    if presence['openWindow']:
+
+    if presence['openWindow'] and user_ra in presence:
         update_presence = {"$set": {user_ra: True}}
         result = presence_collection.update_one({"classId": int(class_id), "date": int(date) }, update_presence)
         return "Success" if result.modified_count else 'Failed'
