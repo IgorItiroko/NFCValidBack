@@ -2,7 +2,6 @@ from flask import Flask, request
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-import json
 from bson import json_util
 
 
