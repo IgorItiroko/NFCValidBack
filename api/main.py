@@ -22,7 +22,7 @@ def home_route():
 @app.route("/getclasses/<user_ra>", methods=['GET'])
 def get_classes(user_ra):
     user = users_collection.find_one({"RA": int(user_ra)},{"_id": 0})
-    classes = class_collection.find({"id": {'$in': user["classesIn"]}}, {"_id": 0})
+    classes = class_collection.find({'$or':[{'id': {'$in': user["classesIn"]}}, {'owner': user_ra}]}, {"_id": 0})
     return list(classes)
 
 @app.route("/deleteclass/<class_id>", methods=['DELETE'])
