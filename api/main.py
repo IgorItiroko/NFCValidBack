@@ -19,9 +19,11 @@ def home_route():
     return "Hello World"
 
 
-@app.route("/getclasses", methods=['GET'])
-def get_classes():
-    return list(class_collection.find({},{"_id": 0}))
+@app.route("/getclasses/<user_ra>", methods=['GET'])
+def get_classes(user_ra):
+    user = users_collection.find_one({"RA": int(user_ra)},{"_id": 0})
+    classes = class_collection.find({"id": {'$in': user["classesIn"]}}, {"_id": 0})
+    return list(classes)
 
 @app.route("/deleteclass/<class_id>", methods=['DELETE'])
 def delete_class(class_id):
@@ -136,6 +138,7 @@ def get_daily_presence_log(class_id, date):
 @app.route("/getpresencelog/<class_id>", methods=['GET'])
 def get_presence_log(class_id):
     return list(presence_collection.find({"classId": int(class_id)}, {"_id": 0}))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
