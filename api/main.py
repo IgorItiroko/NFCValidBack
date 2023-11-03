@@ -1,8 +1,7 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-from bson import json_util
 
 
 load_dotenv()
@@ -129,7 +128,14 @@ def close_presence_log():
     result = presence_collection.update_one({"classId": int(class_id), "date": int(date)}, close_presence)
     return f'{calculated_presence}' if result.modified_count else 'Failed'
 
-@app.route("/getpresencelog/<class_id>/<date>", methods=['GET'])
-def get_presence_log(class_id, date):
+@app.route("/getdailypresencelog/<class_id>/<date>", methods=['GET'])
+def get_daily_presence_log(class_id, date):
     result = presence_collection.find_one({"classId": int(class_id), "date": int(date)}, {"_id": 0})
     return result if result is not None else "Not Found"
+
+@app.route("/getpresencelog/<class_id>", methods=['GET'])
+def get_presence_log(class_id):
+    return list(presence_collection.find({"classId": int(class_id)}, {"_id": 0}))
+
+if __name__ == "__main__":
+    app.run(debug=True)
