@@ -34,6 +34,7 @@ def delete_class(class_id):
 @app.route("/includeclass", methods=['POST'])
 def set_new_class():
     class_name = request.json['className']
+    class_owner = request.json['owner']
     class_weekday = request.json['weekday']
     class_professor = request.json['professor']
     class_hour = request.json['hour']
@@ -44,7 +45,7 @@ def set_new_class():
     highest_id = 0
     for item in class_list:
         highest_id = item['id'] if item['id'] > highest_id else highest_id
-    result = class_collection.insert_one({ "id": highest_id + 1, "className": class_name, "weekday":class_weekday, "professor": class_professor,\
+    result = class_collection.insert_one({ "id": highest_id + 1, "className": class_name, "weekday":class_weekday, "professor": class_professor, "owner": class_owner,\
                                            "building": class_building, "room": class_room,"hour": class_hour, "color": class_color, "haveParticipantList": False }).inserted_id
     return f'{highest_id + 1}' if result is not None else "Failed"
 
